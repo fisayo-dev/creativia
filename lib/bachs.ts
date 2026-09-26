@@ -6,7 +6,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * money is always a decimal string at currency precision, e.g. "5.00".
  */
 
-const API_URL = (process.env.BACHS_API_URL ?? "https://sandbox-api.bachs.io").replace(/\/$/, "");
+const API_URL = (process.env.BACHS_API_URL?.trim() || "https://sandbox-api.bachs.io").replace(/\/$/, "");
 
 export class BachsError extends Error {
   constructor(

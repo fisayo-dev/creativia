@@ -1,4 +1,9 @@
-const url = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+// `||` not `??`: an empty env var (e.g. left blank in the vercel dashboard) must fall through too
+const vercelHost = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+const url = (
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+  (vercelHost ? `https://${vercelHost}` : "http://localhost:3000")
+).replace(/\/$/, "");
 
 export const siteConfig = {
   name: "creativia",
