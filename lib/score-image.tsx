@@ -12,11 +12,12 @@ import { formatDuration } from "@/utils/format";
 
 export const SCORE_IMAGE_SIZE = { width: 1200, height: 630 };
 
-const C = {
+export const C = {
   primary: "#FF8A1F",
   primaryDark: "#E0700A",
   primarySoft: "#FFF1E3",
   success: "#22B573",
+  successDark: "#1A9460",
   info: "#1CB0F6",
   ink: "#3C3C3C",
   muted: "#8A8A8A",
@@ -25,7 +26,7 @@ const C = {
 
 let fontsPromise: Promise<{ name: string; data: Buffer; weight: 700 | 900; style: "normal" }[]> | null = null;
 
-function loadFonts() {
+export function loadFonts() {
   fontsPromise ??= Promise.all(
     ([700, 900] as const).map(async (weight) => ({
       name: "Nunito",
@@ -38,7 +39,7 @@ function loadFonts() {
 }
 
 /** satori can't render forwardRef components like HugeiconsIcon, so draw the raw paths */
-function StaticIcon({ icon, size, color }: { icon: IconSvgElement; size: number; color: string }) {
+export function StaticIcon({ icon, size, color }: { icon: IconSvgElement; size: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {icon.map(([tag, { key, ...attrs }]) =>
