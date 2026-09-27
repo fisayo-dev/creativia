@@ -1,4 +1,4 @@
-import { verifyWebhookSignature } from "@/lib/bachs";
+import { verifyBachsSignature } from "@/lib/payments/bachs";
 
 type BachsEvent = {
   id: string;
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   // read the raw body before parsing; re-serializing would break the signature
   const raw = await request.text();
 
-  if (!verifyWebhookSignature(raw, request.headers)) {
+  if (!verifyBachsSignature(raw, request.headers)) {
     return new Response("invalid signature", { status: 401 });
   }
 
