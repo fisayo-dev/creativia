@@ -1,11 +1,17 @@
 import { ImageResponse } from "next/og";
 import { ArrowRight02Icon, Brain02Icon } from "@hugeicons/core-free-icons";
 import { siteConfig } from "@/config/site";
+import { LOCALES } from "@/i18n/config";
 import { C, SCORE_IMAGE_SIZE, StaticIcon, loadFonts } from "@/lib/score-image";
 
 export const alt = `${siteConfig.name} · ${siteConfig.tagline}`;
 export const size = SCORE_IMAGE_SIZE;
 export const contentType = "image/png";
+
+// the card is english for every language, but prerendering each one keeps it static
+export function generateStaticParams() {
+  return LOCALES.map((lang) => ({ lang }));
+}
 
 const CLUES = ["cottage", "swiss", "cake"];
 const ANSWER = "cheese";

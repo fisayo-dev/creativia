@@ -2,12 +2,13 @@
 
 import { useCallback, useMemo, useReducer } from "react";
 import { DEFAULT_GAME_LENGTH } from "@/config/game";
-import { buildQueue, computeStats, computeXp, isCorrect } from "@/lib/game";
+import { NO_HINTS, buildQueue, computeStats, computeXp, isCorrect, maxLetterHints, pickLetterHint } from "@/lib/game";
 import type { AnswerRecord, AnswerStatus, GameLengthId, GameState, WordItem } from "@/types/game";
 
 type Action =
   | { type: "start"; player: string; length: GameLengthId; queue: WordItem[]; now: number }
-  | { type: "hint" }
+  | { type: "letter"; position: number }
+  | { type: "explain" }
   | { type: "answer"; guess: string; skipped: boolean; now: number }
   | { type: "next"; now: number }
   | { type: "end" }
@@ -21,7 +22,7 @@ const initialState: GameState = {
   index: 0,
   answers: [],
   revealed: false,
-  usedHint: false,
+  hints: NO_HINTS,
   questionStartedAt: 0,
   streak: 0,
   bestStreak: 0,
@@ -40,9 +41,16 @@ function reducer(state: GameState, action: Action): GameState {
         questionStartedAt: action.now,
       };
 
-    case "hint":
+    case "letter": {
       if (state.phase !== "playing" || state.revealed) return state;
-      return { ...state, usedHint: true };
+      const { letters } = state.hints;
+      if (letters.includes(action.position) || letters.length >= maxLetterHints(state.queue[state.index])) return state;
+      return { ...state, hints: { ...state.hints, letters: [...letters, action.position] } };
+    }
+
+    case "explain":
+      if (state.phase !== "playing" || state.revealed || state.hints.explained) return state;
+      return { ...state, hints: { ...state.hints, explained: true } };
 
     case "answer": {
       if (state.phase !== "playing" || state.revealed) return state;
@@ -55,8 +63,8 @@ function reducer(state: GameState, action: Action): GameState {
         guess: action.guess.trim(),
         status,
         timeMs,
-        usedHint: state.usedHint,
-        xp: status === "correct" ? computeXp(item, { timeMs, usedHint: state.usedHint, streak }) : 0,
+        hints: state.hints,
+        xp: status === "correct" ? computeXp(item, { timeMs, hints: state.hints, streak }) : 0,
       };
       return {
         ...state,
@@ -71,7 +79,7 @@ function reducer(state: GameState, action: Action): GameState {
       if (state.phase !== "playing") return state;
       const index = state.index + 1;
       if (index >= state.queue.length) return { ...state, phase: "finished", revealed: false };
-      return { ...state, index, revealed: false, usedHint: false, questionStartedAt: action.now };
+      return { ...state, index, revealed: false, hints: NO_HINTS, questionStartedAt: action.now };
     }
 
     case "end":
@@ -97,7 +105,13 @@ export function useGame() {
   const submit = useCallback((guess: string) => dispatch({ type: "answer", guess, skipped: false, now: Date.now() }), []);
   const skip = useCallback(() => dispatch({ type: "answer", guess: "", skipped: true, now: Date.now() }), []);
   const next = useCallback(() => dispatch({ type: "next", now: Date.now() }), []);
-  const hint = useCallback(() => dispatch({ type: "hint" }), []);
+  // the random pick happens out here so the reducer stays pure
+  const revealLetter = useCallback(() => {
+    if (state.phase !== "playing" || state.revealed) return;
+    const position = pickLetterHint(state.queue[state.index], state.hints.letters);
+    if (position !== null) dispatch({ type: "letter", position });
+  }, [state.phase, state.revealed, state.queue, state.index, state.hints.letters]);
+  const explain = useCallback(() => dispatch({ type: "explain" }), []);
   const end = useCallback(() => dispatch({ type: "end" }), []);
   const reset = useCallback(() => dispatch({ type: "reset" }), []);
 
@@ -105,5 +119,5 @@ export function useGame() {
   const lastAnswer = state.revealed ? state.answers[state.answers.length - 1] : undefined;
   const stats = useMemo(() => (state.phase === "finished" ? computeStats(state) : null), [state]);
 
-  return { state, current, lastAnswer, stats, start, submit, skip, next, hint, end, reset };
+  return { state, current, lastAnswer, stats, start, submit, skip, next, revealLetter, explain, end, reset };
 }

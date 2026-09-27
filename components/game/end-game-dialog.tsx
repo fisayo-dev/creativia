@@ -1,9 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Flag02Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui/button";
+import { useI18n } from "@/components/i18n/i18n-provider";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Icon } from "@/components/ui/icon";
+import { t } from "@/i18n/format";
 
 type EndGameDialogProps = {
   open: boolean;
@@ -13,47 +23,31 @@ type EndGameDialogProps = {
 };
 
 export function EndGameDialog({ open, answered, onCancel, onConfirm }: EndGameDialogProps) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+  const { dict } = useI18n();
+  const copy = dict.endGame;
 
   return (
-    <dialog
-      ref={ref}
-      onCancel={(e) => {
-        e.preventDefault();
-        onCancel();
-      }}
-      onClick={(e) => e.target === ref.current && onCancel()}
-      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-3xl border-2 border-b-4 border-line bg-white p-6 text-ink backdrop:bg-black/40 open:animate-pop"
-      aria-labelledby="end-title"
-    >
-      <div className="flex flex-col items-center text-center">
-        <span className="grid size-16 place-items-center rounded-full bg-primary-soft text-primary">
-          <Icon icon={Flag02Icon} size={32} />
-        </span>
-        <h2 id="end-title" className="mt-4 text-2xl font-black">
-          end the game?
-        </h2>
-        <p className="mt-2 font-semibold text-muted">
-          {answered > 0
-            ? `you'll see your stats for the ${answered} word${answered === 1 ? "" : "s"} you've played.`
-            : "you haven't answered any words yet, so you'll head back to the start."}
-        </p>
-        <div className="mt-6 grid w-full gap-3">
-          <Button size="lg" block onClick={onCancel} autoFocus>
-            keep playing
-          </Button>
-          <Button variant="ghost" block onClick={onConfirm} className="text-error hover:text-error-dark">
-            {answered > 0 ? "end & see stats" : "quit"}
-          </Button>
-        </div>
-      </div>
-    </dialog>
+    <AlertDialog open={open} onOpenChange={(next) => !next && onCancel()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <span className="grid size-16 place-items-center rounded-full bg-primary-soft text-primary">
+            <Icon icon={Flag02Icon} size={32} />
+          </span>
+          <AlertDialogTitle>{copy.title}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {answered === 0 ? copy.none : answered === 1 ? copy.playedOne : t(copy.played, { count: answered })}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          {/* cancel first so it takes the initial focus: keeping the game going is the safe default */}
+          <AlertDialogCancel variant="primary" size="lg">
+            {copy.keepPlaying}
+          </AlertDialogCancel>
+          <AlertDialogAction variant="ghost" size="md" onClick={onConfirm} className="text-error hover:text-error-dark">
+            {answered > 0 ? copy.endAndSee : copy.quit}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

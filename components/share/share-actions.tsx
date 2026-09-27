@@ -1,28 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Copy01Icon, Download04Icon, NewTwitterIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Download04Icon, MessageEdit01Icon, NewTwitterIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { useI18n } from "@/components/i18n/i18n-provider";
+import { ShareMessageDialog } from "@/components/share/share-message-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { SharedResult } from "@/types/game";
-import { resultImagePath, resultPageUrl, shareText, xIntentUrl } from "@/utils/share";
+import { resultImagePath, shareMessage, xIntentUrl } from "@/utils/share";
 
 type Status = "idle" | "busy" | "done" | "error";
 
 export function ShareActions({ result, className }: { result: SharedResult; className?: string }) {
-  const [copy, setCopy] = useState<Status>("idle");
+  const { dict } = useI18n();
+  const copy = dict.share;
   const [download, setDownload] = useState<Status>("idle");
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(`${shareText(result)}\n${resultPageUrl(result)}`);
-      setCopy("done");
-    } catch {
-      setCopy("error");
-    }
-    setTimeout(() => setCopy("idle"), 2000);
-  }
 
   async function handleDownload() {
     setDownload("busy");
@@ -46,22 +39,30 @@ export function ShareActions({ result, className }: { result: SharedResult; clas
 
   return (
     <div className={cn("grid gap-3 sm:grid-cols-3", className)}>
-      <Button variant="outline" onClick={handleCopy} aria-live="polite">
-        <Icon icon={copy === "done" ? Tick02Icon : Copy01Icon} size={20} className={copy === "done" ? "text-success" : undefined} />
-        {copy === "done" ? "copied!" : copy === "error" ? "copy failed" : "copy result"}
-      </Button>
+      <ShareMessageDialog message={shareMessage(result, copy)}>
+        <Button variant="outline">
+          <Icon icon={MessageEdit01Icon} size={20} />
+          {copy.copyMessage}
+        </Button>
+      </ShareMessageDialog>
       <a
-        href={xIntentUrl(result)}
+        href={xIntentUrl(result, copy)}
         target="_blank"
         rel="noopener noreferrer"
         className={cn(buttonVariants({ variant: "outline" }), "text-ink")}
       >
         <Icon icon={NewTwitterIcon} size={20} />
-        share on x
+        {copy.shareX}
       </a>
       <Button variant="info" onClick={handleDownload} disabled={download === "busy"} aria-live="polite">
         <Icon icon={download === "done" ? Tick02Icon : Download04Icon} size={20} />
-        {download === "busy" ? "saving…" : download === "done" ? "saved!" : download === "error" ? "try again" : "download image"}
+        {download === "busy"
+          ? copy.saving
+          : download === "done"
+            ? copy.saved
+            : download === "error"
+              ? copy.tryAgain
+              : copy.download}
       </Button>
     </div>
   );

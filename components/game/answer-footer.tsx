@@ -1,13 +1,12 @@
 "use client";
 
 import { CancelCircleIcon, CheckmarkCircle02Icon, Forward01Icon } from "@hugeicons/core-free-icons";
+import { useI18n } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { AnswerRecord } from "@/types/game";
 import { formatDuration } from "@/utils/format";
-
-const PRAISE = ["nice!", "brilliant!", "nailed it!", "great link!", "sharp!", "you got it!"];
 
 type AnswerFooterProps = {
   result?: AnswerRecord;
@@ -19,8 +18,10 @@ type AnswerFooterProps = {
 
 /** duolingo style bottom bar: skip/check while answering, colored feedback after */
 export function AnswerFooter({ result, canCheck, isLast, onSkip, onContinue }: AnswerFooterProps) {
+  const { dict } = useI18n();
   const tone = result?.status === "correct" ? "success" : result ? "error" : null;
-  const continueLabel = isLast ? "see results" : "continue";
+  const continueLabel = isLast ? dict.feedback.seeResults : dict.feedback.continue;
+  const { praise } = dict.feedback;
 
   return (
     <footer
@@ -46,10 +47,10 @@ export function AnswerFooter({ result, canCheck, isLast, onSkip, onContinue }: A
               <div className={tone === "success" ? "text-success-dark" : "text-error-dark"}>
                 <p className="text-xl font-black">
                   {result.status === "correct"
-                    ? PRAISE[result.item.id % PRAISE.length]
+                    ? praise[result.item.id % praise.length]
                     : result.status === "skipped"
-                      ? "skipped"
-                      : "not quite"}
+                      ? dict.feedback.skipped
+                      : dict.feedback.notQuite}
                 </p>
                 <p className="text-sm font-bold">
                   {result.status === "correct" ? (
@@ -58,7 +59,7 @@ export function AnswerFooter({ result, canCheck, isLast, onSkip, onContinue }: A
                     </>
                   ) : (
                     <>
-                      answer: <span className="font-black">{result.item.answers.join(" / ")}</span>
+                      {dict.feedback.answer} <span className="font-black">{result.item.answers.join(" / ")}</span>
                     </>
                   )}
                 </p>
@@ -78,10 +79,10 @@ export function AnswerFooter({ result, canCheck, isLast, onSkip, onContinue }: A
           <div className="flex w-full items-center justify-between gap-3">
             <Button variant="outline" size="lg" onClick={onSkip} className="px-6">
               <Icon icon={Forward01Icon} size={20} />
-              skip
+              {dict.feedback.skip}
             </Button>
             <Button type="submit" form="answer-form" variant="success" size="lg" disabled={!canCheck} className="flex-1 sm:max-w-48">
-              check
+              {dict.feedback.check}
             </Button>
           </div>
         )}

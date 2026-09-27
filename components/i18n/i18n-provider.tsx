@@ -1,0 +1,18 @@
+"use client";
+
+import { createContext, useContext, type ReactNode } from "react";
+import type { Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionaries/en";
+
+const I18nContext = createContext<{ locale: Locale; dict: Dictionary } | null>(null);
+
+export function I18nProvider({ locale, dict, children }: { locale: Locale; dict: Dictionary; children: ReactNode }) {
+  return <I18nContext.Provider value={{ locale, dict }}>{children}</I18nContext.Provider>;
+}
+
+/** the current language and its dictionary, for client components */
+export function useI18n() {
+  const value = useContext(I18nContext);
+  if (!value) throw new Error("useI18n must be used inside <I18nProvider>");
+  return value;
+}

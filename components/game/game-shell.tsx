@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { Logo } from "@/components/layout/logo";
 import { PlayScreen } from "@/components/game/play-screen";
 import { ResultsScreen } from "@/components/game/results-screen";
@@ -52,10 +53,6 @@ export function GameShell() {
     game.end();
   }
 
-  function handleHint() {
-    play("tap");
-    game.hint();
-  }
 
   if (state.phase === "playing" && current) {
     return (
@@ -65,7 +62,8 @@ export function GameShell() {
         lastAnswer={game.lastAnswer}
         onSubmit={handleSubmit}
         onSkip={handleSkip}
-        onHint={handleHint}
+        onRevealLetter={game.revealLetter}
+        onExplain={game.explain}
         onNext={handleNext}
         onEnd={handleEnd}
       />
@@ -76,7 +74,10 @@ export function GameShell() {
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between px-4 sm:h-20">
         <Logo />
-        <SoundToggle />
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
+          <SoundToggle />
+        </div>
       </header>
       {state.phase === "finished" && game.stats ? (
         <ResultsScreen
