@@ -7,6 +7,7 @@ const url = (
 
 export const siteConfig = {
   name: "creativia",
+  /** english copy for the share images. pages use the localized versions from the dictionaries */
   tagline: "find the word that links them all",
   description:
     "creativia is a playful remote associates test. see three words, find the one word that connects them, and measure your creative thinking.",
@@ -17,8 +18,9 @@ export const siteConfig = {
   source: "https://www.remote-associates-test.com/",
 } as const;
 
+/** labels come from the dictionaries under `nav` */
 export const navLinks = [
-  { href: "/", label: "home" },
-  { href: "/play", label: "play" },
-  { href: "/donate", label: "donate" },
+  { href: "/", key: "home" },
+  { href: "/play", key: "play" },
+  { href: "/donate", key: "donate" },
 ] as const;

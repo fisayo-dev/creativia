@@ -1,7 +1,11 @@
+"use client";
+
 import { CancelCircleIcon, CheckmarkCircle02Icon, Forward01Icon, Idea01Icon } from "@hugeicons/core-free-icons";
+import { useI18n } from "@/components/i18n/i18n-provider";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { DIFFICULTY_META } from "@/config/game";
+import { usedAnyHint } from "@/lib/game";
 import { cn } from "@/lib/utils";
 import type { AnswerRecord } from "@/types/game";
 import { formatDuration } from "@/utils/format";
@@ -13,9 +17,10 @@ const statusStyle = {
 } as const;
 
 export function AnswerReview({ answers }: { answers: AnswerRecord[] }) {
+  const { dict } = useI18n();
   return (
     <Card className="p-0 sm:p-0">
-      <h2 className="px-5 pt-5 text-lg font-black text-ink sm:px-6">every word</h2>
+      <h2 className="px-5 pt-5 text-lg font-black text-ink sm:px-6">{dict.results.everyWord}</h2>
       <ol className="mt-3 divide-y-2 divide-line">
         {answers.map((a, i) => {
           const style = statusStyle[a.status];
@@ -31,12 +36,16 @@ export function AnswerReview({ answers }: { answers: AnswerRecord[] }) {
                   {a.status === "wrong" && (
                     <span className="ml-2 font-bold text-error line-through decoration-2">{a.guess}</span>
                   )}
-                  {a.usedHint && <Icon icon={Idea01Icon} size={16} className="ml-1.5 inline text-info" />}
+                  {usedAnyHint(a.hints) && (
+                    <span title={dict.results.usedHints}>
+                      <Icon icon={Idea01Icon} size={16} className="ml-1.5 inline text-info" />
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="shrink-0 text-right text-xs font-extrabold tabular-nums">
                 <p className="text-muted">{formatDuration(a.timeMs)}</p>
-                <p style={{ color: DIFFICULTY_META[a.item.difficulty].color }}>{DIFFICULTY_META[a.item.difficulty].label}</p>
+                <p style={{ color: DIFFICULTY_META[a.item.difficulty].color }}>{dict.difficulty[a.item.difficulty]}</p>
               </div>
             </li>
           );

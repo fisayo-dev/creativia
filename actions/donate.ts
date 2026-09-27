@@ -6,7 +6,9 @@ import { siteConfig } from "@/config/site";
 import { BachsError, createCheckoutSession, isBachsConfigured } from "@/lib/bachs";
 import { cleanName } from "@/utils/text";
 
-export type DonateState = { error: string | null };
+export type DonateError = "min" | "max" | "email" | "notConfigured" | "rejected" | "unavailable";
+
+export type DonateState = { error: DonateError | null };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,16 +19,16 @@ export async function createDonation(_prev: DonateState, formData: FormData): Pr
   const message = String(formData.get("message") ?? "").trim().slice(0, 280);
 
   if (!Number.isFinite(amount) || amount < donateConfig.minAmount) {
-    return { error: `the minimum donation is $${donateConfig.minAmount}.` };
+    return { error: "min" };
   }
   if (amount > donateConfig.maxAmount) {
-    return { error: `the maximum donation is $${donateConfig.maxAmount}.` };
+    return { error: "max" };
   }
   if (email && !EMAIL_RE.test(email)) {
-    return { error: "that email doesn't look right." };
+    return { error: "email" };
   }
   if (!isBachsConfigured()) {
-    return { error: "donations aren't set up yet. please check back soon!" };
+    return { error: "notConfigured" };
   }
 
   let checkoutUrl: string;
@@ -36,7 +38,6 @@ export async function createDonation(_prev: DonateState, formData: FormData): Pr
       currency: donateConfig.currency,
       successUrl: `${siteConfig.url}/donate/thanks`,
       cancelUrl: `${siteConfig.url}/donate`,
-      // omit the customer so the hosted page collects details when no email is given
       ...(email && { customer: { email, ...(name && { name }) } }),
       metadata: {
         kind: "donation",
@@ -48,13 +49,9 @@ export async function createDonation(_prev: DonateState, formData: FormData): Pr
   } catch (error) {
     console.error("[donate] failed to create checkout", error);
     return {
-      error:
-        error instanceof BachsError && error.status && error.status < 500
-          ? "we couldn't start that payment. please try a different amount."
-          : "payments are having a moment. please try again shortly.",
+      error: error instanceof BachsError && error.status && error.status < 500 ? "rejected" : "unavailable",
     };
   }
 
-  // redirect() throws, so it must live outside the try/catch
   redirect(checkoutUrl);
 }

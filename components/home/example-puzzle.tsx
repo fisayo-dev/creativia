@@ -3,16 +3,18 @@
 import { useState } from "react";
 import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { WordTiles } from "@/components/game/word-tiles";
+import { useI18n } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 
 export function ExamplePuzzle() {
+  const { dict } = useI18n();
   const [revealed, setRevealed] = useState(false);
 
   return (
     <Card className="w-full">
-      <p className="mb-4 text-center text-sm font-extrabold text-muted">try one: what word links these?</p>
+      <p className="mb-4 text-center text-sm font-extrabold text-muted">{dict.home.examplePrompt}</p>
       <WordTiles words={["cottage", "swiss", "cake"]} size="md" />
       <div className="mt-5 flex justify-center">
         {revealed ? (
@@ -22,7 +24,7 @@ export function ExamplePuzzle() {
           </p>
         ) : (
           <Button variant="outline" size="sm" onClick={() => setRevealed(true)}>
-            reveal answer
+            {dict.home.exampleReveal}
           </Button>
         )}
       </div>

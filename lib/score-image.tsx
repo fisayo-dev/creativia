@@ -6,6 +6,7 @@ import { ImageResponse } from "next/og";
 import type { IconSvgElement } from "@hugeicons/react";
 import { Brain02Icon } from "@hugeicons/core-free-icons";
 import { siteConfig } from "@/config/site";
+import { en } from "@/i18n/dictionaries/en";
 import { getRank } from "@/lib/game";
 import type { SharedResult } from "@/types/game";
 import { formatDuration } from "@/utils/format";
@@ -73,7 +74,8 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
 
 export async function renderScoreImage(result: SharedResult) {
   const accuracy = result.answered ? Math.round((result.correct / result.answered) * 100) : 0;
-  const rank = getRank(accuracy);
+  // the image is shared everywhere, so it stays in english
+  const rank = en.ranks[getRank(accuracy)];
 
   return new ImageResponse(
     (

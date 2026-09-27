@@ -11,12 +11,18 @@ export type GameLengthId = "quick" | "classic" | "marathon";
 
 export type AnswerStatus = "correct" | "wrong" | "skipped";
 
+/** hints used on one word: positions of revealed letters in the answer, and whether the explanation was read */
+export type HintUsage = {
+  letters: number[];
+  explained: boolean;
+};
+
 export type AnswerRecord = {
   item: WordItem;
   guess: string;
   status: AnswerStatus;
   timeMs: number;
-  usedHint: boolean;
+  hints: HintUsage;
   xp: number;
 };
 
@@ -31,7 +37,7 @@ export type GameState = {
   answers: AnswerRecord[];
   /** true while the check/continue footer is showing the result of the current word */
   revealed: boolean;
-  usedHint: boolean;
+  hints: HintUsage;
   questionStartedAt: number;
   streak: number;
   bestStreak: number;

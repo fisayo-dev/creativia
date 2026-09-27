@@ -1,6 +1,6 @@
-import { DIFFICULTY_META, DIFFICULTY_ORDER, GAME_LENGTHS, RANKS, SCORING } from "@/config/game";
+import { DIFFICULTY_META, DIFFICULTY_ORDER, GAME_LENGTHS, RANKS, SCORING, type RankId } from "@/config/game";
 import { WORDS } from "@/lib/words";
-import type { GameLengthId, GameState, GameStats, WordItem } from "@/types/game";
+import type { GameLengthId, GameState, GameStats, HintUsage, WordItem } from "@/types/game";
 import { normalizeWord, shuffle } from "@/utils/text";
 
 /** picks words for a game, shuffled within each difficulty but always easiest → hardest */
@@ -19,18 +19,41 @@ export function isCorrect(item: WordItem, guess: string): boolean {
   return item.answers.some((a) => normalizeWord(a) === g);
 }
 
-/** the hint reveals the first letter and the answer's length */
-export function getHint(item: WordItem): string {
-  const answer = item.answers[0];
-  return answer[0] + " _".repeat(answer.length - 1);
+export const NO_HINTS: HintUsage = { letters: [], explained: false };
+
+/** the word the hints describe. items with several answers hint at the first one */
+export function hintAnswer(item: WordItem): string {
+  return item.answers[0].toLowerCase();
+}
+
+/** how many letters may be revealed. never all of them, or the hint would be the answer */
+export function maxLetterHints(item: WordItem): number {
+  return Math.max(0, Math.min(SCORING.maxLetters, hintAnswer(item).length - 1));
+}
+
+/** a random position that isn't revealed yet, or null when the letter hints are used up */
+export function pickLetterHint(item: WordItem, revealed: number[]): number | null {
+  if (revealed.length >= maxLetterHints(item)) return null;
+  const open = [...hintAnswer(item)].map((_, i) => i).filter((i) => !revealed.includes(i));
+  return open.length ? open[Math.floor(Math.random() * open.length)] : null;
+}
+
+export function usedAnyHint(hints: HintUsage): boolean {
+  return hints.letters.length > 0 || hints.explained;
+}
+
+/** 0..1 share of the base xp that hints have cost */
+export function hintPenalty(hints: HintUsage): number {
+  const penalty = hints.letters.length * SCORING.letterPenalty + (hints.explained ? SCORING.explainPenalty : 0);
+  return Math.min(1, penalty);
 }
 
 export function computeXp(
   item: WordItem,
-  { timeMs, usedHint, streak }: { timeMs: number; usedHint: boolean; streak: number },
+  { timeMs, hints, streak }: { timeMs: number; hints: HintUsage; streak: number },
 ): number {
   let xp = DIFFICULTY_META[item.difficulty].xp;
-  if (usedHint) xp *= SCORING.hintMultiplier;
+  xp *= 1 - hintPenalty(hints);
   if (timeMs <= SCORING.fastAnswerMs) xp += SCORING.fastBonus;
   if (streak >= SCORING.streakThreshold) xp += SCORING.streakBonus;
   return Math.round(xp);
@@ -69,6 +92,6 @@ export function computeStats(state: GameState): GameStats {
   };
 }
 
-export function getRank(accuracy: number) {
-  return RANKS.find((r) => accuracy >= r.min) ?? RANKS[RANKS.length - 1];
+export function getRank(accuracy: number): RankId {
+  return (RANKS.find((r) => accuracy >= r.min) ?? RANKS[RANKS.length - 1]).id;
 }

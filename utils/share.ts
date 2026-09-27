@@ -1,4 +1,6 @@
 import { siteConfig } from "@/config/site";
+import type { Dictionary } from "@/i18n/dictionaries/en";
+import { t } from "@/i18n/format";
 import type { GameStats, SharedResult } from "@/types/game";
 import { cleanName } from "@/utils/text";
 import { formatDuration } from "@/utils/format";
@@ -54,16 +56,21 @@ export function resultImagePath(result: SharedResult): string {
   return `/api/score-image?${toParams(result)}`;
 }
 
-export function shareText(result: SharedResult): string {
+export function shareText(result: SharedResult, copy: Dictionary["share"]): string {
   return [
-    `i scored ${result.correct}/${result.answered} on ${siteConfig.name} 🧠`,
-    `⚡ ${result.xp} xp · ⏱️ ${formatDuration(result.timeMs)} · 🔥 best streak ${result.streak}`,
-    `think you're more creative? try it:`,
+    t(copy.textScore, { correct: result.correct, answered: result.answered, site: siteConfig.name }),
+    t(copy.textStats, { xp: result.xp, time: formatDuration(result.timeMs), streak: result.streak }),
+    copy.textChallenge,
   ].join("\n");
 }
 
-export function xIntentUrl(result: SharedResult): string {
-  const params = new URLSearchParams({ text: shareText(result), url: resultPageUrl(result) });
+/** the full message people copy: the text plus a link back to the score card */
+export function shareMessage(result: SharedResult, copy: Dictionary["share"]): string {
+  return `${shareText(result, copy)}\n${resultPageUrl(result)}`;
+}
+
+export function xIntentUrl(result: SharedResult, copy: Dictionary["share"]): string {
+  const params = new URLSearchParams({ text: shareText(result, copy), url: resultPageUrl(result) });
   if (siteConfig.xHandle) params.set("via", siteConfig.xHandle.replace(/^@/, ""));
   return `https://x.com/intent/post?${params}`;
 }

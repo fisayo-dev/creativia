@@ -5,12 +5,13 @@ type WordTilesProps = {
   /** changing this key replays the pop-in animation */
   animationKey?: string | number;
   size?: "md" | "lg";
+  label?: string;
   className?: string;
 };
 
-export function WordTiles({ words, animationKey, size = "lg", className }: WordTilesProps) {
+export function WordTiles({ words, animationKey, size = "lg", label, className }: WordTilesProps) {
   return (
-    <ul key={animationKey} className={cn("grid grid-cols-3 gap-2 sm:gap-4", className)} aria-label="clue words">
+    <ul key={animationKey} className={cn("grid grid-cols-3 gap-2 sm:gap-4", className)} aria-label={label}>
       {words.map((word, i) => (
         <li
           key={word}

@@ -3,17 +3,21 @@
 import { useActionState, useState } from "react";
 import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { createDonation, type DonateState } from "@/actions/donate";
+import { useI18n } from "@/components/i18n/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { donateConfig } from "@/config/donate";
+import { t } from "@/i18n/format";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/utils/format";
 
 const initialState: DonateState = { error: null };
 
 export function DonateForm() {
+  const { dict } = useI18n();
+  const copy = dict.donate;
   const [state, formAction, pending] = useActionState(createDonation, initialState);
   const [preset, setPreset] = useState<number | null>(donateConfig.defaultAmount);
   const [custom, setCustom] = useState("");
@@ -25,7 +29,7 @@ export function DonateForm() {
     <Card className="w-full">
       <form action={formAction} className="grid gap-6">
         <fieldset>
-          <legend className="mb-3 text-sm font-extrabold text-ink">choose an amount</legend>
+          <legend className="mb-3 text-sm font-extrabold text-ink">{copy.chooseAmount}</legend>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {donateConfig.presets.map((value) => {
               const active = preset === value;
@@ -48,9 +52,9 @@ export function DonateForm() {
           <div className="relative mt-3">
             <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-lg font-black text-muted">$</span>
             <Input
-              aria-label="custom amount in dollars"
+              aria-label={copy.customAmountLabel}
               inputMode="decimal"
-              placeholder="custom amount"
+              placeholder={copy.customAmount}
               value={custom}
               onFocus={() => setPreset(null)}
               onChange={(e) => {
@@ -65,16 +69,16 @@ export function DonateForm() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="name">name (optional)</Label>
-            <Input id="name" name="name" placeholder="anonymous" maxLength={60} autoComplete="name" className="h-12 text-base" />
+            <Label htmlFor="name">{copy.name}</Label>
+            <Input id="name" name="name" placeholder={copy.namePlaceholder} maxLength={60} autoComplete="name" className="h-12 text-base" />
           </div>
           <div>
-            <Label htmlFor="email">email (optional)</Label>
+            <Label htmlFor="email">{copy.email}</Label>
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="for your receipt"
+              placeholder={copy.emailPlaceholder}
               autoComplete="email"
               className="h-12 text-base"
             />
@@ -82,23 +86,25 @@ export function DonateForm() {
         </div>
 
         <div>
-          <Label htmlFor="message">leave a note (optional)</Label>
-          <Textarea id="message" name="message" placeholder="say hi to the team" maxLength={280} />
+          <Label htmlFor="message">{copy.note}</Label>
+          <Textarea id="message" name="message" placeholder={copy.notePlaceholder} maxLength={280} />
         </div>
 
         {state.error && (
           <p role="alert" className="rounded-2xl bg-error-soft px-4 py-3 text-sm font-bold text-error-dark">
-            {state.error}
+            {t(copy.errors[state.error], {
+              amount: formatMoney(state.error === "max" ? donateConfig.maxAmount : donateConfig.minAmount),
+            })}
           </p>
         )}
 
         <div>
           <Button type="submit" size="lg" block disabled={!valid || pending}>
             <Icon icon={FavouriteIcon} />
-            {pending ? "opening checkout…" : valid ? `donate ${formatMoney(amount)}` : "donate"}
+            {pending ? copy.opening : valid ? t(copy.donateAmount, { amount: formatMoney(amount) }) : copy.donate}
           </Button>
           <p className="mt-3 text-center text-xs font-bold text-muted">
-            secure checkout by bachs · cards, bank transfer & mobile money
+            {copy.secure}
           </p>
         </div>
       </form>
