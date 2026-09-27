@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Image from "next/image";
 import { FavouriteIcon, SecurityCheckIcon } from "@hugeicons/core-free-icons";
 import { createDonation, type DonateState } from "@/actions/donate";
 import { useI18n } from "@/components/i18n/i18n-provider";
@@ -16,20 +17,25 @@ import { currencySymbol, formatMoney } from "@/utils/format";
 
 const initialState: DonateState = { error: null };
 
-const providerMark: Record<DonationProvider, string> = {
-  squad: "bg-[#7B2CBF]",
-  paystack: "bg-[#09A5DB]",
-  bachs: "bg-ink",
+/** official marks from each provider's site. bachs ships its own tile, the others sit on a white one */
+const providerLogo: Record<DonationProvider, { src: string; tile: boolean }> = {
+  squad: { src: "/brands/squad.svg", tile: true },
+  paystack: { src: "/brands/paystack.png", tile: true },
+  bachs: { src: "/brands/bachs.png", tile: false },
 };
 
 function ProviderLabel({ id, detail }: { id: DonationProvider; detail?: string }) {
+  const logo = providerLogo[id];
   return (
     <span className="flex min-w-0 items-center gap-3">
       <span
         aria-hidden
-        className={cn("grid size-8 shrink-0 place-items-center rounded-xl text-sm font-black uppercase text-white", providerMark[id])}
+        className={cn(
+          "grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl",
+          logo.tile && "border-2 border-line bg-white p-1.5",
+        )}
       >
-        {donateConfig.providerNames[id][0]}
+        <Image src={logo.src} alt="" width={36} height={36} unoptimized className="size-full object-contain" />
       </span>
       <span className="flex min-w-0 flex-col text-left leading-tight">
         <span className="font-black text-ink">{donateConfig.providerNames[id]}</span>

@@ -8,7 +8,7 @@ const secretKey = () => process.env.BACHS_API_KEY?.trim();
 
 function requireKey() {
   const key = secretKey();
-  if (key) throw new PaymentError("bachs is not configured");
+  if (!key) throw new PaymentError("bachs is not configured");
   return key;
 }
 
