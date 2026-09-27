@@ -3,6 +3,7 @@ import { Coffee02Icon, Rocket01Icon, SparklesIcon, StarIcon } from "@hugeicons/c
 import { DonateForm } from "@/components/donate/donate-form";
 import { Icon } from "@/components/ui/icon";
 import { getDictionary } from "@/i18n/dictionaries";
+import { getProviderOptions } from "@/lib/payments";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary();
@@ -40,7 +41,7 @@ export default async function DonatePage() {
         </ul>
       </section>
 
-      <DonateForm />
+      <DonateForm providers={getProviderOptions()} />
     </div>
   );
 }

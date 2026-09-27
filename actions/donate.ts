@@ -1,12 +1,20 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { donateConfig } from "@/config/donate";
+import { donateConfig, isDonationProvider } from "@/config/donate";
 import { siteConfig } from "@/config/site";
-import { BachsError, createCheckoutSession, isBachsConfigured } from "@/lib/bachs";
+import { createReference, PaymentError, paymentProviders } from "@/lib/payments";
 import { cleanName } from "@/utils/text";
 
-export type DonateError = "min" | "max" | "email" | "notConfigured" | "rejected" | "unavailable";
+export type DonateError =
+  | "min"
+  | "max"
+  | "email"
+  | "emailRequired"
+  | "provider"
+  | "notConfigured"
+  | "rejected"
+  | "unavailable";
 
 export type DonateState = { error: DonateError | null };
 
@@ -14,6 +22,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function createDonation(_prev: DonateState, formData: FormData): Promise<DonateState> {
   const amount = Number(formData.get("amount"));
+  const providerId = formData.get("provider");
   const name = cleanName(String(formData.get("name") ?? ""), 60);
   const email = String(formData.get("email") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim().slice(0, 280);
@@ -24,32 +33,39 @@ export async function createDonation(_prev: DonateState, formData: FormData): Pr
   if (amount > donateConfig.maxAmount) {
     return { error: "max" };
   }
+  if (!isDonationProvider(providerId)) {
+    return { error: "provider" };
+  }
+  if (!email && donateConfig.emailRequired.includes(providerId)) {
+    return { error: "emailRequired" };
+  }
   if (email && !EMAIL_RE.test(email)) {
     return { error: "email" };
   }
-  if (!isBachsConfigured()) {
+
+  const provider = paymentProviders[providerId];
+  if (!provider.isConfigured()) {
     return { error: "notConfigured" };
   }
 
+  // the reference lives in the path so providers can append their own query params safely
+  const reference = createReference();
   let checkoutUrl: string;
   try {
-    const session = await createCheckoutSession({
-      amount: amount.toFixed(2),
+    checkoutUrl = await provider.createCheckout({
+      reference,
+      amount: Math.round(amount * 100) / 100,
       currency: donateConfig.currency,
-      successUrl: `${siteConfig.url}/donate/thanks`,
+      ...(email && { email }),
+      ...(name && { name }),
+      ...(message && { message }),
+      successUrl: `${siteConfig.url}/donate/thanks/${providerId}/${reference}`,
       cancelUrl: `${siteConfig.url}/donate`,
-      ...(email && { customer: { email, ...(name && { name }) } }),
-      metadata: {
-        kind: "donation",
-        ...(name && { donor_name: name }),
-        ...(message && { message }),
-      },
     });
-    checkoutUrl = session.checkout_url;
   } catch (error) {
-    console.error("[donate] failed to create checkout", error);
+    console.error(`[donate] ${providerId} failed to create checkout`, error);
     return {
-      error: error instanceof BachsError && error.status && error.status < 500 ? "rejected" : "unavailable",
+      error: error instanceof PaymentError && error.status && error.status < 500 ? "rejected" : "unavailable",
     };
   }
 

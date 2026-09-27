@@ -16,10 +16,21 @@ export function formatClock(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+/** narrowSymbol so NGN reads "₦2,500", not "NGN 2,500" */
 export function formatMoney(amount: number, currency = "USD"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
   }).format(amount);
+}
+
+/** "NGN" → "₦" */
+export function currencySymbol(currency: string): string {
+  return (
+    new Intl.NumberFormat("en-US", { style: "currency", currency, currencyDisplay: "narrowSymbol" })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")?.value ?? currency
+  );
 }
