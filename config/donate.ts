@@ -11,7 +11,7 @@ export type ProviderOption = { id: DonationProvider; available: boolean; live: b
 export const donateConfig = {
   currency: "NGN",
   presets: [5000, 10000, 20000, 50000],
-  defaultAmount: 2500,
+  defaultAmount: 5000,
   minAmount: 100,
   maxAmount: 5_000_000,
   providerNames: { paystack: "paystack", squad: "squad", bachs: "bachs" } satisfies Record<DonationProvider, string>,
