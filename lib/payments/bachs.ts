@@ -20,13 +20,29 @@ type CheckoutSession = {
   amount?: string;
   currency?: string;
   reference?: string;
+  pricing?: { amount?: string; currency?: string };
+  charge?: { status?: string; amount?: string; currency?: string } | null;
 };
 
+// a finished checkout is `completed`, not `succeeded`. bachs also mixes casing
+// between endpoints (collection events send `SUCCEEDED`), so compare lowercased
 const STATUS: Record<string, PaymentStatus> = {
+  completed: "paid",
+  complete: "paid",
   succeeded: "paid",
+  paid: "paid",
   abandoned: "failed",
   expired: "failed",
+  canceled: "failed",
+  cancelled: "failed",
+  failed: "failed",
 };
+
+function sessionStatus(session: CheckoutSession): PaymentStatus {
+  const lower = (s?: string | null) => s?.toLowerCase() ?? "";
+  if (lower(session.payment_status) === "paid" || lower(session.charge?.status) === "succeeded") return "paid";
+  return STATUS[lower(session.status)] ?? "pending";
+}
 
 const CHECKOUT_ID_RE = /^[A-Za-z0-9_-]{4,128}$/;
 
@@ -66,10 +82,21 @@ export const bachs: PaymentProvider = {
     // a checkout_id pasted onto someone else's thank-you url shouldn't show their amount
     if (session.reference && session.reference !== reference) throw new PaymentError("reference mismatch", 400);
 
+    const status = sessionStatus(session);
+    if (status === "pending") {
+      // so production logs show what bachs actually sent if this ever sticks again
+      console.warn("[bachs] checkout still pending", {
+        checkout: checkoutId,
+        status: session.status,
+        payment_status: session.payment_status,
+        charge_status: session.charge?.status,
+      });
+    }
+
     return {
-      status: session.payment_status === "paid" ? "paid" : (STATUS[session.status] ?? "pending"),
-      amount: Number(session.amount ?? 0),
-      currency: session.currency ?? "",
+      status,
+      amount: Number(session.amount ?? session.charge?.amount ?? session.pricing?.amount ?? 0),
+      currency: session.currency ?? session.charge?.currency ?? session.pricing?.currency ?? "",
     };
   },
 };
