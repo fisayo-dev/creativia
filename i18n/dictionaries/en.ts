@@ -29,7 +29,7 @@ export const en = {
     titleHighlight: "brain?",
     intro: "the remote associates test, turned into a game. find the hidden word that links three others.",
     playNow: "play now",
-    support: "support",
+    support: "donate",
     facts: "{count} puzzles · no sign up · free",
     howItWorks: "how it works",
     steps: [
