@@ -173,7 +173,7 @@ export const es: Dictionary = {
     note: "deja una nota (opcional)",
     notePlaceholder: "saluda al equipo",
     payWith: "pagar con",
-    payWithPlaceholder: "elige una plataforma",
+    payWithPlaceholder: "haz clic para elegir una plataforma",
     providers: {
       squad: "tarjetas, transferencia y ussd",
       paystack: "tarjetas, transferencia y ussd",

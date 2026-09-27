@@ -175,7 +175,7 @@ export const en = {
     note: "leave a note (optional)",
     notePlaceholder: "say hi to the team",
     payWith: "pay with",
-    payWithPlaceholder: "choose a platform",
+    payWithPlaceholder: "click to select a platform",
     providers: {
       squad: "cards, transfer & ussd",
       paystack: "cards, transfer & ussd",

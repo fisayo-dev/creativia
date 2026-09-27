@@ -17,10 +17,9 @@ import { currencySymbol, formatMoney } from "@/utils/format";
 
 const initialState: DonateState = { error: null };
 
-/** official marks from each provider's site. bachs ships its own tile, the others sit on a white one */
 const providerLogo: Record<DonationProvider, { src: string; tile: boolean }> = {
-  squad: { src: "/brands/squad.svg", tile: true },
   paystack: { src: "/brands/paystack.png", tile: true },
+  squad: { src: "/brands/squad.svg", tile: true },
   bachs: { src: "/brands/bachs.png", tile: false },
 };
 
@@ -45,17 +44,13 @@ function ProviderLabel({ id, detail }: { id: DonationProvider; detail?: string }
   );
 }
 
-function defaultProvider(providers: ProviderOption[]) {
-  return (providers.find((p) => p.available && p.live) ?? providers.find((p) => p.available))?.id;
-}
-
 export function DonateForm({ providers }: { providers: ProviderOption[] }) {
   const { dict } = useI18n();
   const copy = dict.donate;
   const [state, formAction, pending] = useActionState(createDonation, initialState);
   const [preset, setPreset] = useState<number | null>(donateConfig.defaultAmount);
   const [custom, setCustom] = useState("");
-  const [provider, setProvider] = useState<DonationProvider | undefined>(() => defaultProvider(providers));
+  const [provider, setProvider] = useState<DonationProvider>();
 
   const { currency } = donateConfig;
   const amount = preset ?? Number(custom);
@@ -109,7 +104,7 @@ export function DonateForm({ providers }: { providers: ProviderOption[] }) {
 
         <div>
           <Label htmlFor="provider">{copy.payWith}</Label>
-          <Select name="provider" value={provider} onValueChange={(v) => setProvider(v as DonationProvider)}>
+          <Select name="provider" value={provider ?? ""} onValueChange={(v) => setProvider(v as DonationProvider)}>
             <SelectTrigger id="provider" className="h-16">
               <SelectValue placeholder={copy.payWithPlaceholder}>
                 {provider && <ProviderLabel id={provider} detail={copy.providers[provider]} />}
