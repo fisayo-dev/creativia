@@ -173,10 +173,6 @@ export function DonateForm({ providers }: { providers: ProviderOption[] }) {
             <Icon icon={FavouriteIcon} />
             {pending ? copy.opening : valid ? t(copy.donateAmount, { amount: formatMoney(amount, currency) }) : copy.donate}
           </Button>
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-bold text-muted">
-            <Icon icon={SecurityCheckIcon} size={14} />
-            {provider ? t(copy.secure, { provider: donateConfig.providerNames[provider] }) : copy.secureGeneric}
-          </p>
         </div>
       </form>
     </Card>
